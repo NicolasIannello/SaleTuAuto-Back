@@ -2,6 +2,7 @@ const { response }=require('express');
 const { generarJWT } = require('../helpers/jwt');
 const bcrypt=require('bcryptjs');
 const Admin = require('../models/admin');
+const { v4: uuidv4 }=require('uuid');
 
 const login=async(req,res=response)=>{
     const { user, pass }= req.body;
@@ -57,4 +58,79 @@ const renewToken= async(req,res=response)=>{
     }
 }
 
-module.exports={ login, renewToken }
+
+const crearAdmin= async(req,res = response) =>{
+    const {pass,usuario}=req.body;
+
+    try {
+        const adminDB= await Admin.findById(req.uid)
+        if(!adminDB){
+            res.json({
+                ok:false
+            })
+        }
+
+        const existeAdmin= await Admin.findOne({usuario});
+        if(existeAdmin){
+            return res.status(400).json({
+                ok:false,
+                msg:'Ya existe una cuenta con usuario'
+            });
+        }
+
+        const admin= new Admin(req.body);
+
+        const salt=bcrypt.genSaltSync();
+        admin.pass=bcrypt.hashSync(pass,salt);
+        admin.uuid=uuidv4();
+        await admin.save();
+
+        res.json({
+            ok:true,
+        });
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error'
+        });
+    }
+};
+
+const getAdmins= async(req,res = response) =>{
+    try {
+        const adminDB= await Admin.findById(req.uid)
+        if(!adminDB){
+            res.json({
+                ok:false
+            })
+        }
+
+        const [ admins, total ]= await Promise.all([
+            Admin.aggregate([
+                { $project: {
+                    __v: 0,
+                    "__v": 0,
+                    "pass": 0,
+                } },
+            ]),
+            Admin.countDocuments()
+        ]); 
+
+        res.json({
+            ok:true,
+            admins,
+            total
+        });
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error'
+        });
+    }
+};
+
+module.exports={ login, renewToken, crearAdmin, getAdmins }
