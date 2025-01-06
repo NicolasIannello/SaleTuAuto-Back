@@ -68,6 +68,10 @@ const crearAdmin= async(req,res = response) =>{
             res.json({
                 ok:false
             })
+        }else if(!adminDB.usuarios){
+            res.json({
+                ok:false
+            })
         }
 
         const existeAdmin= await Admin.findOne({usuario});
@@ -140,6 +144,10 @@ const deleteUser=async(req,res=response) =>{
         const adminDB= await Admin.findById(req.uid)
 
         if(!adminDB){
+            res.json({
+                ok:false
+            })
+        }else if(!adminDB.usuarios){
             res.json({
                 ok:false
             })
