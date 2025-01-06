@@ -133,4 +133,40 @@ const getAdmins= async(req,res = response) =>{
     }
 };
 
-module.exports={ login, renewToken, crearAdmin, getAdmins }
+const deleteUser=async(req,res=response) =>{
+    const id=req.body.id;
+    const tipo=req.body.user;
+    try {        
+        const adminDB= await Admin.findById(req.uid)
+
+        if(!adminDB){
+            res.json({
+                ok:false
+            })
+        }
+        
+        // if(tipo=="user"){
+        //     const user= await Usuario.findById(id);
+        //     if(user.tipo=='emp'){
+        //         await Empresa.deleteMany({'mail': { $eq: user.mail}})
+        //     }
+        //     await Usuario.findByIdAndDelete(id);
+        // }else{
+            await Admin.findByIdAndDelete(id);
+        // }
+        
+        
+        res.json({
+            ok:true,
+        })
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error borrar'
+        });
+    }
+}
+
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser }
