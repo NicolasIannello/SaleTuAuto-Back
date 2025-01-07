@@ -3,6 +3,8 @@ const { generarJWT } = require('../helpers/jwt');
 const bcrypt=require('bcryptjs');
 const Admin = require('../models/admin');
 const { v4: uuidv4 }=require('uuid');
+const Auto = require('../models/auto');
+const { subirImagen } = require('../helpers/imagenes');
 
 const login=async(req,res=response)=>{
     const { user, pass }= req.body;
@@ -177,4 +179,46 @@ const deleteUser=async(req,res=response) =>{
     }
 }
 
-module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser }
+const crearAuto= async(req,res = response) =>{
+    try {
+        const adminDB= await Admin.findById(req.uid)
+        if(!adminDB){
+            res.json({
+                ok:false
+            })
+        }else if(!adminDB.autos){
+            res.json({
+                ok:false
+            })
+        }
+
+        const auto= new Auto(req.body);
+        auto.uuid=uuidv4();
+        await auto.save();
+
+        if(req.files['img'].length==undefined){
+            subirImagen(req.files['img'],auto.uuid,1,res)
+        }else{
+            for (let i = 0; i < req.files['img'].length; i++) {
+                for (let j = 0; j < req.body.imgOrden.length; j++) {
+                    if(req.body.imgOrden[j]==req.files['img'][i].name){
+                        subirImagen(req.files['img'][i],auto.uuid,(j+1),res)
+                    }
+                }
+            };
+        }
+
+        res.json({
+            ok:true,
+        });
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error'
+        });
+    }
+};
+
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto }

@@ -2,9 +2,12 @@ const { Router }=require('express');
 const { check }=require('express-validator');
 const { validarCampos } = require('../middlewares/validar-campos');
 const { validarJWT } = require('../middlewares/validar-jwt');
-const { login, renewToken, crearAdmin, getAdmins, deleteUser } = require('../controllers/admin');
+const { login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto } = require('../controllers/admin');
+const expressFileUpload =require('express-fileupload');
 
 const router=Router();
+
+router.use(expressFileUpload());
 
 router.post('/login', [
     check('user','el campo es obligatorio').not().isEmpty(),
@@ -38,5 +41,21 @@ router.post('/deleteUser', [
     validarCampos,
     validarJWT
 ], deleteUser);
+
+router.post('/crearAuto', [
+    check('marca','el campo es obligatorio').not().isEmpty(),
+    check('modelo','el campo es obligatorio').not().isEmpty(),
+    check('version','el campo es obligatorio').not().isEmpty(),
+    check('ano','el campo es obligatorio').not().isEmpty(),
+    check('kms','el campo es obligatorio').not().isEmpty(),
+    check('ubicacion','el campo es obligatorio').not().isEmpty(),
+    check('transmision','el campo es obligatorio').not().isEmpty(),
+    check('traccion','el campo es obligatorio').not().isEmpty(),
+    check('precio','el campo es obligatorio').not().isEmpty(),
+    check('token','el campo es obligatorio').not().isEmpty(),
+    check('tipo','el campo es obligatorio').not().isEmpty(),
+    validarCampos,
+    validarJWT
+], crearAuto);
 
 module.exports=router;

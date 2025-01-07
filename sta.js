@@ -12,6 +12,7 @@ app.use( express.json() );
 dbConnection();
 
 app.use('/sta/admin', require('./routes/admins'));
+app.use('/sta/auto', require('./routes/autos'));
 
 app.listen( process.env.PORT, () =>{
     console.log('Iniciando');
