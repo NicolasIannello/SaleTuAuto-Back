@@ -5,6 +5,8 @@ const Admin = require('../models/admin');
 const { v4: uuidv4 }=require('uuid');
 const Auto = require('../models/auto');
 const { subirImagen } = require('../helpers/imagenes');
+const Imagen = require('../models/imagen');
+const fs=require('fs');
 
 const login=async(req,res=response)=>{
     const { user, pass }= req.body;
@@ -221,4 +223,42 @@ const crearAuto= async(req,res = response) =>{
     }
 };
 
-module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto }
+const deleteAuto=async(req,res=response) =>{
+    const _id=req.body._id;
+    try {     
+        const adminDB= await Admin.findById(req.uid)
+        if(!adminDB){
+            res.json({
+                ok:false
+            })
+        }else if(!adminDB.autos){
+            res.json({
+                ok:false
+            })
+        }
+        
+        const autoDB = await Auto.findById(_id)
+        const imgDB = await Imagen.find({uuid_auto:autoDB.uuid})
+        
+        if(imgDB.length!=0){
+            for (let i = 0; i < imgDB.length; i++) {
+                let pathImg='./files/autos/'+imgDB[i].img
+                if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+                await Imagen.findByIdAndDelete(imgDB[i]._id);
+            }
+        }
+        await Auto.findByIdAndDelete(autoDB._id);
+
+        res.json({
+            ok:true,
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error borrar'
+        });
+    }
+};
+
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto }
