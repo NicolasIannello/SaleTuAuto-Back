@@ -4,7 +4,7 @@ const bcrypt=require('bcryptjs');
 const Admin = require('../models/admin');
 const { v4: uuidv4 }=require('uuid');
 const Auto = require('../models/auto');
-const { subirImagen } = require('../helpers/imagenes');
+const { subirImagen, borrarImagen } = require('../helpers/imagenes');
 const Imagen = require('../models/imagen');
 const fs=require('fs');
 
@@ -261,4 +261,88 @@ const deleteAuto=async(req,res=response) =>{
     }
 };
 
-module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto }
+const actualizarAuto= async(req,res=response)=>{    
+    const adminDB= await Admin.findById(req.uid)
+    if(!adminDB){
+        res.json({
+            ok:false
+        })
+    }else if(!adminDB.autos){
+        res.json({
+            ok:false
+        })
+    }
+    
+    const autoDB= await Auto.find({uuid:req.body.auto});
+    if(!autoDB){
+        res.json({
+            ok:false
+        })
+    }
+
+    let {...camposL}=autoDB;            
+    camposL=req.body;
+
+    if(req.body.imgElim){
+        const imagenesElim = await Imagen.find({uuid_auto:autoDB[0].uuid}).sort({ orden: 1 }) 
+        let flagElim=0;       
+        for (let i = 0; i < imagenesElim.length; i++) {                
+            if(flagElim>0){
+                let {...campos}=imagenesElim[i];
+                campos._doc.orden=campos._doc.orden-flagElim;    
+                await Imagen.findByIdAndUpdate(imagenesElim[i]._id, campos._doc,{new:true}); 
+            }
+            if(Array.isArray(req.body.imgElim)){
+                for (let j = 0; j < req.body.imgElim.length; j++) {
+                    if(imagenesElim[i].img==req.body.imgElim[j]){
+                        flagElim++;
+                        let pathImg='./files/autos/'+imagenesElim[i].img
+                        if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+                        await Imagen.findByIdAndDelete(imagenesElim[i]._id);
+                    }
+                }
+            }else{                    
+                if(imagenesElim[i].img==req.body.imgElim){
+                    flagElim++;
+                    let pathImg='./files/autos/'+imagenesElim[i].img
+                    if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+                    await Imagen.findByIdAndDelete(imagenesElim[i]._id);
+                }
+            }
+        }
+
+    }else if(req.files && req.files['img']) {
+        borrarImagen(req.body.auto,'autos');
+        if(req.files['img'].length==undefined){
+            subirImagen(req.files['img'],req.body.auto,1,res)
+        }else{
+            for (let i = 0; i < req.files['img'].length; i++) {
+                for (let j = 0; j < req.body.imgOrden.length; j++) {
+                    if(req.body.imgOrden[j]==req.files['img'][i].name){                            
+                        subirImagen(req.files['img'][i],req.body.auto,(j+1),res)
+                    }
+                }
+            };
+        }
+    }
+    
+    await Auto.findByIdAndUpdate(autoDB[0]._id, camposL, {new:true});   
+        
+    if(Array.isArray(req.body.unset)){
+        var unset = { "$unset": { } }
+        for (let i = 0; i < req.body.unset.length; i++) {
+            unset["$unset"][req.body.unset[i]] = "";
+        }
+        await Auto.findByIdAndUpdate(autoDB[0]._id, unset, {new:true});   
+    }else{
+        var unset = { "$unset": { } }
+        unset["$unset"][req.body.unset] = "";
+        await Auto.findByIdAndUpdate(autoDB[0]._id, unset, {new:true});
+    }
+
+    res.json({
+        ok:true,
+    })
+}
+
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto }
