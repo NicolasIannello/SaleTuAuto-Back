@@ -34,7 +34,7 @@ const getAutos= async(req,res = response) =>{
 const auto= async(req,res = response) =>{    
     const auto = await Auto.aggregate([
         { "$match": { uuid:req.body.uuid } },
-        { $project: { __v: 0, '_id':0, 'uuid':0 } },
+        { $project: { __v: 0, '_id':0 } },
         { $lookup: {
             from: "imagens",
             localField: "uuid_auto",
