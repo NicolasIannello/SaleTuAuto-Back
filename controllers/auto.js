@@ -17,6 +17,15 @@ const getAutos= async(req,res = response) =>{
             { $project: {
                 __v: 0,
             } },
+            { $lookup: {
+                from: "imagens",
+                localField: "uuid",
+                foreignField: "uuid_auto",
+                "pipeline": [ { "$sort" : { "orden" : 1 } }, { "$limit" : 1 } ],
+                as: "img"
+            } },
+            {$unwind: { path: "$img", preserveNullAndEmptyArrays: true }},
+            { $project: { __v: 0, "img.__v": 0, "img._id": 0, "img.uuid_auto": 0, "img.orden": 0 } },
             sortOperator,
             { $skip: desde },
             { $limit: limit },
@@ -37,8 +46,8 @@ const auto= async(req,res = response) =>{
         { $project: { __v: 0, '_id':0 } },
         { $lookup: {
             from: "imagens",
-            localField: "uuid_auto",
-            foreignField: "uuid",
+            localField: "uuid",
+            foreignField: "uuid_auto",
             "pipeline": [ { "$sort" : { "orden" : 1 } } ],
             as: "img"
         } },
