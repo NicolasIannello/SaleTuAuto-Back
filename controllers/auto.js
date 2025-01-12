@@ -11,9 +11,16 @@ const getAutos= async(req,res = response) =>{
     const order= req.query.order || '_id';
     var sortOperator = { "$sort": { } };
     sortOperator["$sort"][order] = orden;
+    var matchOperator = { "$match": { } };
+    matchOperator['$match']['marca'] = req.query.marca ? req.query.marca : { $exists: true }
+    var matchOperator2 = { "$match": { } };
+    matchOperator2['$match']['modelo'] = req.query.modelo ? req.query.modelo : { $exists: true }
+    var matchOperator3 = { "$match": { } };
+    matchOperator3['$match']['version'] = req.query.version ? req.query.version : { $exists: true }
 
     const [ autos, total ]= await Promise.all([
         Auto.aggregate([
+            matchOperator,matchOperator2,matchOperator3,
             { $project: {
                 __v: 0,
             } },
@@ -81,4 +88,31 @@ const getArchivo= async(req,res = response) =>{
     }
 };
 
-module.exports={ getAutos, auto, getArchivo }
+const marcas= async(req,res = response) =>{    
+    const marcas = await Auto.distinct("marca");    
+
+    res.json({
+        ok:true,
+        marcas
+    });
+};
+
+const modelos= async(req,res = response) =>{    
+    const modelos = await Auto.distinct("modelo", {"marca":req.body.marca});
+    
+    res.json({
+        ok:true,
+        modelos
+    });
+};
+
+const versiones= async(req,res = response) =>{    
+    const versiones = await Auto.distinct("version", {$and:[{"marca":req.body.marca}, {"modelo":req.body.modelo}]});
+    
+    res.json({
+        ok:true,
+        versiones
+    });
+};
+
+module.exports={ getAutos, auto, getArchivo, marcas, modelos, versiones }
