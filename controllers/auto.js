@@ -27,10 +27,18 @@ const getAutos= async(req,res = response) =>{
         matchKmMenorK=matchMarca
         matchKmMayorK=matchMarca
     }
+    var matchKmMenorP = { "$match": { } };
+    matchKmMenorP['$match']['precio'] = { $lte: req.query.mayorRP!=undefined ? parseInt(req.query.mayorRP) : { $exists: true }  }; 
+    var matchKmMayorP = { "$match": { } };
+    matchKmMayorP['$match']['precio'] = { $gte: req.query.menorRP!=undefined ? parseInt(req.query.menorRP) : { $exists: true } }; 
+    if(!req.query.mayorRP || !req.query.menorRP){
+        matchKmMenorP=matchMarca
+        matchKmMayorP=matchMarca
+    }
 
     const [ autos, total ]= await Promise.all([
         Auto.aggregate([
-            matchMarca,matchModelo,matchVersion,matchAno,matchKmMenorK,matchKmMayorK,
+            matchMarca,matchModelo,matchVersion,matchAno,matchKmMenorK,matchKmMayorK,matchKmMenorP,matchKmMayorP,
             { $project: {
                 __v: 0,
             } },
@@ -53,11 +61,16 @@ const getAutos= async(req,res = response) =>{
     const mayor = await Auto.find().sort({kms:-1}).limit(1)
     const menor = await Auto.find().sort({kms:1}).limit(1)
 
+    const mayorp = await Auto.find().sort({precio:-1}).limit(1)
+    const menorp = await Auto.find().sort({precio:1}).limit(1)
+
     res.json({
         ok:true,
         autos,
         mayorkm: mayor[0].kms,
         menorkm: menor[0].kms,
+        mayorp: mayorp[0].precio,
+        menorp: menorp[0].precio,
         total
     });
 };
