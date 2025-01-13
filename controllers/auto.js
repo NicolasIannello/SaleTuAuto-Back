@@ -11,16 +11,26 @@ const getAutos= async(req,res = response) =>{
     const order= req.query.order || '_id';
     var sortOperator = { "$sort": { } };
     sortOperator["$sort"][order] = orden;
-    var matchOperator = { "$match": { } };
-    matchOperator['$match']['marca'] = req.query.marca ? req.query.marca : { $exists: true }
-    var matchOperator2 = { "$match": { } };
-    matchOperator2['$match']['modelo'] = req.query.modelo ? req.query.modelo : { $exists: true }
-    var matchOperator3 = { "$match": { } };
-    matchOperator3['$match']['version'] = req.query.version ? req.query.version : { $exists: true }
+    var matchMarca = { "$match": { } };
+    matchMarca['$match']['marca'] = req.query.marca ? req.query.marca : { $exists: true }
+    var matchModelo = { "$match": { } };
+    matchModelo['$match']['modelo'] = req.query.modelo ? req.query.modelo : { $exists: true }
+    var matchVersion = { "$match": { } };
+    matchVersion['$match']['version'] = req.query.version ? req.query.version : { $exists: true }
+    var matchAno = { "$match": { } };
+    matchAno['$match']['ano'] = req.query.ano ? parseInt(req.query.ano) : { $exists: true }
+    var matchKmMenorK = { "$match": { } };
+    matchKmMenorK['$match']['kms'] = { $lte: req.query.mayorR!=undefined ? parseInt(req.query.mayorR) : { $exists: true }  }; 
+    var matchKmMayorK = { "$match": { } };
+    matchKmMayorK['$match']['kms'] = { $gte: req.query.menorR!=undefined ? parseInt(req.query.menorR) : { $exists: true } }; 
+    if(!req.query.mayorR || !req.query.menorR){
+        matchKmMenorK=matchMarca
+        matchKmMayorK=matchMarca
+    }
 
     const [ autos, total ]= await Promise.all([
         Auto.aggregate([
-            matchOperator,matchOperator2,matchOperator3,
+            matchMarca,matchModelo,matchVersion,matchAno,matchKmMenorK,matchKmMayorK,
             { $project: {
                 __v: 0,
             } },
@@ -39,10 +49,15 @@ const getAutos= async(req,res = response) =>{
         ]).collation({locale: 'en'}),
         Auto.countDocuments()
     ]); 
-    
+
+    const mayor = await Auto.find().sort({kms:-1}).limit(1)
+    const menor = await Auto.find().sort({kms:1}).limit(1)
+
     res.json({
         ok:true,
         autos,
+        mayorkm: mayor[0].kms,
+        menorkm: menor[0].kms,
         total
     });
 };
@@ -88,31 +103,24 @@ const getArchivo= async(req,res = response) =>{
     }
 };
 
-const marcas= async(req,res = response) =>{    
-    const marcas = await Auto.distinct("marca");    
+const datos= async(req,res = response) =>{
+    let datos;
+    switch (req.body.dato) {
+        case 'modelo':
+            datos = await Auto.distinct("modelo", {"marca":req.body.marca});
+            break;
+        case 'version':
+            datos = await Auto.distinct("version", {$and:[{"marca":req.body.marca}, {"modelo":req.body.modelo}]});
+            break;
+        default:
+            datos = await Auto.distinct(req.body.dato);                
+            break;
+    }
 
     res.json({
         ok:true,
-        marcas
+        datos
     });
 };
 
-const modelos= async(req,res = response) =>{    
-    const modelos = await Auto.distinct("modelo", {"marca":req.body.marca});
-    
-    res.json({
-        ok:true,
-        modelos
-    });
-};
-
-const versiones= async(req,res = response) =>{    
-    const versiones = await Auto.distinct("version", {$and:[{"marca":req.body.marca}, {"modelo":req.body.modelo}]});
-    
-    res.json({
-        ok:true,
-        versiones
-    });
-};
-
-module.exports={ getAutos, auto, getArchivo, marcas, modelos, versiones }
+module.exports={ getAutos, auto, getArchivo, datos }
