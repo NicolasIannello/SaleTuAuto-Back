@@ -33,7 +33,7 @@ const getAutos= async(req,res = response) =>{
     matchKmMayorP['$match']['precio'] = { $gte: req.query.menorRP!=undefined ? parseInt(req.query.menorRP) : { $exists: true } }; 
     if(!req.query.mayorRP || !req.query.menorRP){
         matchKmMenorP=matchMarca
-        matchKmMayorP=matchMarca
+        matchKmMayorP=matchMarca 
     }
     var matchUbicacion = { "$match": { "ubicacion": { "$regex": { }, "$options": "i" } } }
     matchUbicacion["$match"]["ubicacion"]["$regex"] = req.query.ubicacion ? req.query.ubicacion : '';
