@@ -35,10 +35,12 @@ const getAutos= async(req,res = response) =>{
         matchKmMenorP=matchMarca
         matchKmMayorP=matchMarca
     }
+    var matchUbicacion = { "$match": { "ubicacion": { "$regex": { }, "$options": "i" } } }
+    matchUbicacion["$match"]["ubicacion"]["$regex"] = req.query.ubicacion ? req.query.ubicacion : '';
 
     const [ autos, total ]= await Promise.all([
         Auto.aggregate([
-            matchMarca,matchModelo,matchVersion,matchAno,matchKmMenorK,matchKmMayorK,matchKmMenorP,matchKmMayorP,
+            matchMarca,matchModelo,matchVersion,matchAno,matchKmMenorK,matchKmMayorK,matchKmMenorP,matchKmMayorP,matchUbicacion,
             { $project: {
                 __v: 0,
             } },
