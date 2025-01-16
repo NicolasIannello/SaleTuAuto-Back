@@ -69,10 +69,10 @@ const getAutos= async(req,res = response) =>{
     res.json({
         ok:true,
         autos,
-        mayorkm: mayor[0].kms,
-        menorkm: menor[0].kms,
-        mayorp: mayorp[0].precio,
-        menorp: menorp[0].precio,
+        mayorkm: mayor[0] ? mayor[0].kms : 0,
+        menorkm: menor[0] ? menor[0].kms : 0,
+        mayorp: mayorp[0] ? mayorp[0].precio : 0,
+        menorp: menorp[0] ? menorp[0].precio : 0,
         total
     });
 };
