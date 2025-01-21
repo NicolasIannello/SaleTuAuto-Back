@@ -7,6 +7,7 @@ const Auto = require('../models/auto');
 const { subirImagen, borrarImagen } = require('../helpers/imagenes');
 const Imagen = require('../models/imagen');
 const fs=require('fs');
+const MarcaModelo = require('../models/marcaModelo');
 
 const login=async(req,res=response)=>{
     const { user, pass }= req.body;
@@ -197,6 +198,11 @@ const crearAuto= async(req,res = response) =>{
         const auto= new Auto(req.body);
         auto.uuid=uuidv4();
         await auto.save();
+
+        if(req.body.marcasFlag=='SI' || req.body.modelosFlag=='SI'){
+            const marcaModelo= new MarcaModelo({marca: req.body.marca, modelo: req.body.modelo});
+            await marcaModelo.save();
+        }
 
         if(req.files['img'].length==undefined){
             subirImagen(req.files['img'],auto.uuid,1,res)

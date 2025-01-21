@@ -3,6 +3,7 @@ const Imagen = require("../models/imagen");
 const { response }=require('express');
 const path=require('path');
 const fs=require('fs');
+const MarcaModelo = require("../models/marcaModelo");
 
 const getAutos= async(req,res = response) =>{
     const desde= parseInt(req.query.desde) || 0;
@@ -121,6 +122,12 @@ const getArchivo= async(req,res = response) =>{
 const datos= async(req,res = response) =>{
     let datos;
     switch (req.body.dato) {
+        case 'marcaAdmin':
+            datos = await MarcaModelo.distinct("marca");
+            break;
+        case 'modeloAdmin':
+            datos = await MarcaModelo.distinct("modelo", {"marca":req.body.marca});
+            break;
         case 'modelo':
             datos = await Auto.distinct("modelo", {"marca":req.body.marca});
             break;
