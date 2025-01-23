@@ -8,6 +8,7 @@ const { subirImagen, borrarImagen } = require('../helpers/imagenes');
 const Imagen = require('../models/imagen');
 const fs=require('fs');
 const MarcaModelo = require('../models/marcaModelo');
+const Tyc = require('../models/tyc');
 
 const login=async(req,res=response)=>{
     const { user, pass }= req.body;
@@ -351,4 +352,49 @@ const actualizarAuto= async(req,res=response)=>{
     })
 }
 
-module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto }
+const getTyC= async(req,res=response)=>{    
+    try {
+        const tyc= await Tyc.find();
+        res.json({
+            ok:true,
+            tyc: tyc[0].tyc,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error'
+        });
+    }
+}
+
+const actualizarTyC= async(req,res=response)=>{    
+    const adminDB= await Admin.findById(req.uid)
+    if(!adminDB){
+        res.json({
+            ok:false
+        })
+    }else if(!adminDB.autos){
+        res.json({
+            ok:false
+        })
+    }
+    
+    const tycDB= await Tyc.find();
+    if(!tycDB){
+        res.json({
+            ok:false
+        })
+    }
+    
+    let {...camposL}=tycDB[0]._doc;
+    camposL.tyc=req.body.tyc;
+    
+    await Tyc.findByIdAndUpdate(tycDB[0]._id, camposL, {new:true});   
+
+    res.json({
+        ok:true,
+    })
+}
+
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, getTyC, actualizarTyC }
