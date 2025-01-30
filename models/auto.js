@@ -11,6 +11,7 @@ const AutoSchema = Schema({
     transmision: { type: String, required: true },
     traccion: { type: String, required: true },
     precio: { type: Number, required: true },
+    moneda: { type: String, required: true },
 
     cilindros: { type: Number, required: false },
     caballos: { type: Number, required: false },
