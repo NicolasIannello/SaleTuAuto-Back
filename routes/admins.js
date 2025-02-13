@@ -2,7 +2,7 @@ const { Router }=require('express');
 const { check }=require('express-validator');
 const { validarCampos } = require('../middlewares/validar-campos');
 const { validarJWT } = require('../middlewares/validar-jwt');
-const { login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, actualizarTyC, getTyC } = require('../controllers/admin');
+const { login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, actualizarTyC, getTyC, actualizarUser } = require('../controllers/admin');
 const expressFileUpload =require('express-fileupload');
 
 const router=Router();
@@ -83,5 +83,14 @@ router.post('/actualizarTyc', [
 ], actualizarTyC);
 
 router.post('/tyc', getTyC);
+
+router.post('/actualizarUser', [
+    check('campos','el campo es obligatorio').not().isEmpty(),
+    check('id','el campo es obligatorio').not().isEmpty(),
+    check('token','el campo es obligatorio').not().isEmpty(),
+    check('tipo','el campo es obligatorio').not().isEmpty(),
+    validarCampos,
+    validarJWT
+], actualizarUser);
 
 module.exports=router;
