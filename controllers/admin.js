@@ -52,18 +52,19 @@ const renewToken= async(req,res=response)=>{
     const adminDB= await Admin.findById(_id)
 
     if(!adminDB){
-        res.json({
+        return res.json({
             ok:false
         })
     }else{
-        res.json({
+        return res.json({
             ok:true,
             token,
             user: adminDB.usuario,
+            users: adminDB.usuarios,
+            autos: adminDB.autos
         })
     }
 }
-
 
 const crearAdmin= async(req,res = response) =>{
     const {pass,usuario}=req.body;
@@ -71,11 +72,11 @@ const crearAdmin= async(req,res = response) =>{
     try {
         const adminDB= await Admin.findById(req.uid)
         if(!adminDB){
-            res.json({
+            return res.json({
                 ok:false
             })
         }else if(!adminDB.usuarios){
-            res.json({
+            return res.json({
                 ok:false
             })
         }
@@ -84,7 +85,7 @@ const crearAdmin= async(req,res = response) =>{
         if(existeAdmin){
             return res.status(400).json({
                 ok:false,
-                msg:'Ya existe una cuenta con usuario'
+                msg:'Ya existe una cuenta con ese usuario'
             });
         }
 
@@ -112,7 +113,11 @@ const getAdmins= async(req,res = response) =>{
     try {
         const adminDB= await Admin.findById(req.uid)
         if(!adminDB){
-            res.json({
+            return res.json({
+                ok:false
+            })
+        }else if(!adminDB.usuarios){
+            return res.json({
                 ok:false
             })
         }
@@ -150,11 +155,11 @@ const deleteUser=async(req,res=response) =>{
         const adminDB= await Admin.findById(req.uid)
 
         if(!adminDB){
-            res.json({
+            return res.json({
                 ok:false
             })
         }else if(!adminDB.usuarios){
-            res.json({
+            return res.json({
                 ok:false
             })
         }
@@ -183,15 +188,53 @@ const deleteUser=async(req,res=response) =>{
     }
 }
 
+const actualizarUser= async(req,res=response)=>{    
+    const adminDB= await Admin.findById(req.uid)
+    if(!adminDB){
+        return res.json({
+            ok:false
+        })
+    }else if(!adminDB.usuarios){
+        return res.json({
+            ok:false
+        })
+    }else if(req.uid==req.body.id){
+        return res.json({
+            ok:false
+        })
+    }    
+    
+    const adminData= await Admin.findById(req.body.id);
+    if(!adminData){
+        return res.json({
+            ok:false
+        })
+    }
+
+    let {...camposL}=adminData;    
+    camposL._doc=req.body.campos;
+    
+    if(req.body.nuevaPass!=''){
+        const salt=bcrypt.genSaltSync();
+        camposL._doc.pass=bcrypt.hashSync(req.body.nuevaPass,salt);
+    }
+    
+    await Admin.findByIdAndUpdate(req.body.id, camposL, {new:true});   
+
+    res.json({
+        ok:true,
+    })
+}
+
 const crearAuto= async(req,res = response) =>{
     try {
         const adminDB= await Admin.findById(req.uid)
         if(!adminDB){
-            res.json({
+            return res.json({
                 ok:false
             })
         }else if(!adminDB.autos){
-            res.json({
+            return res.json({
                 ok:false
             })
         }
@@ -235,11 +278,11 @@ const deleteAuto=async(req,res=response) =>{
     try {     
         const adminDB= await Admin.findById(req.uid)
         if(!adminDB){
-            res.json({
+            return res.json({
                 ok:false
             })
         }else if(!adminDB.autos){
-            res.json({
+            return res.json({
                 ok:false
             })
         }
@@ -271,18 +314,18 @@ const deleteAuto=async(req,res=response) =>{
 const actualizarAuto= async(req,res=response)=>{    
     const adminDB= await Admin.findById(req.uid)
     if(!adminDB){
-        res.json({
+        return res.json({
             ok:false
         })
     }else if(!adminDB.autos){
-        res.json({
+        return res.json({
             ok:false
         })
     }
     
     const autoDB= await Auto.find({uuid:req.body.auto});
     if(!autoDB){
-        res.json({
+        return res.json({
             ok:false
         })
     }
@@ -371,18 +414,18 @@ const getTyC= async(req,res=response)=>{
 const actualizarTyC= async(req,res=response)=>{    
     const adminDB= await Admin.findById(req.uid)
     if(!adminDB){
-        res.json({
+        return res.json({
             ok:false
         })
-    }else if(!adminDB.autos){
-        res.json({
+    }else if(!adminDB.usuarios){
+        return res.json({
             ok:false
         })
     }
     
     const tycDB= await Tyc.find();
     if(!tycDB){
-        res.json({
+        return res.json({
             ok:false
         })
     }
@@ -397,4 +440,4 @@ const actualizarTyC= async(req,res=response)=>{
     })
 }
 
-module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, getTyC, actualizarTyC }
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, getTyC, actualizarTyC, actualizarUser }
