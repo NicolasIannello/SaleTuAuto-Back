@@ -241,6 +241,7 @@ const crearAuto= async(req,res = response) =>{
 
         const auto= new Auto(req.body);
         auto.uuid=uuidv4();
+        auto.estado='Activo';
         await auto.save();
 
         if(req.body.marcasFlag=='SI' || req.body.modelosFlag=='SI'){
