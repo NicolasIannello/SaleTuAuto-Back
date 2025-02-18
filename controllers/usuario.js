@@ -1,5 +1,6 @@
 const { response }=require('express');
 const nodemailer = require("nodemailer");
+const Form = require('../models/form');
 
 const mailContacto= async(req,res=response)=>{    
     const {nomapel,telefono,fecha} = req.body
@@ -17,6 +18,9 @@ const mailContacto= async(req,res=response)=>{
 
     let msg = "Nombre y apellido: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha;
     let msgHTML = "Nombre y apellido: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha;
+
+    const form= new Form(req.body);
+    await form.save();
 
     transporter.sendMail({
         from: '"SALE Tu Auto" <contacto@gruppodf.com.ar>',

@@ -9,6 +9,7 @@ const Imagen = require('../models/imagen');
 const fs=require('fs');
 const MarcaModelo = require('../models/marcaModelo');
 const Tyc = require('../models/tyc');
+const Form = require('../models/form');
 
 const login=async(req,res=response)=>{
     const { user, pass }= req.body;
@@ -441,4 +442,33 @@ const actualizarTyC= async(req,res=response)=>{
     })
 }
 
-module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, getTyC, actualizarTyC, actualizarUser }
+const getForm= async(req,res = response) =>{
+    try {
+        const adminDB= await Admin.findById(req.uid)
+        if(!adminDB){
+            return res.json({
+                ok:false
+            })
+        }else if(!adminDB.usuarios){
+            return res.json({
+                ok:false
+            })
+        }
+
+        const form= await Form.find();
+
+        res.json({
+            ok:true,
+            form
+        });
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok:false,
+            msg:'error'
+        });
+    }
+};
+
+module.exports={ login, renewToken, crearAdmin, getAdmins, deleteUser, crearAuto, deleteAuto, actualizarAuto, getTyC, actualizarTyC, actualizarUser, getForm }
