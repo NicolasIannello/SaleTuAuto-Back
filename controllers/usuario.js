@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 const Form = require('../models/form');
 
 const mailContacto= async(req,res=response)=>{    
-    const {nomapel,telefono,fecha} = req.body
+    const {nomapel,telefono,fecha,subject,auto,link} = req.body
     const transporter = nodemailer.createTransport({
         maxConnections: 1,
         pool: true,
@@ -11,21 +11,27 @@ const mailContacto= async(req,res=response)=>{
         port: 465,
         secure: true,
         auth: {
-            user: 'contacto@gruppodf.com.ar',
+            user: process.env.MAIL1+'@'+process.env.MAIL2,
             pass: process.env.MPASS
         }
     });
 
-    let msg = "Nombre y apellido: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha;
-    let msgHTML = "Nombre y apellido: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha;
+    let msg,msgHTML;
+    if(link==''){
+        msg = "Matricula: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha+"\n"+"Descripcion: "+auto;
+        msgHTML = "Matricula: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha+"<br><br>"+"Descripcion: "+auto;
+    }else{
+        msg = "Nombre y apellido: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha+"\n"+"Auto: "+auto+"\n"+"Link: "+link;
+        msgHTML = "Nombre y apellido: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha+"<br><br>"+"Auto: "+auto+"<br><br>"+"link: "+link;
+    }
 
     const form= new Form(req.body);
     await form.save();
 
     transporter.sendMail({
-        from: '"SALE Tu Auto" <contacto@gruppodf.com.ar>',
-        to: 'dfelippelli@gruppodf.com.ar',
-        subject: "SALE Tu Auto Formulario de contacto",
+        from: '"SALE Tu Auto" <'+process.env.MAIL1+'@'+process.env.MAIL2+'>',
+        to: process.env.MTO1+'@'+process.env.MTO2,
+        subject: subject,
         text: msg,
         html: msgHTML,
     }, function(error, info){
