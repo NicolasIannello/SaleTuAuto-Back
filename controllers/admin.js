@@ -2,7 +2,7 @@ const { response }=require('express');
 const { generarJWT } = require('../helpers/jwt');
 const bcrypt=require('bcryptjs');
 const Admin = require('../models/admin');
-const { v4: uuidv4 }=require('uuid');
+const { v4: uuidv4, validate, version }=require('uuid');
 const Auto = require('../models/auto');
 const { subirImagen, borrarImagen } = require('../helpers/imagenes');
 const Imagen = require('../models/imagen');
@@ -335,48 +335,80 @@ const actualizarAuto= async(req,res=response)=>{
     let {...camposL}=autoDB;            
     camposL=req.body;
 
-    if(req.body.imgElim){
-        const imagenesElim = await Imagen.find({uuid_auto:autoDB[0].uuid}).sort({ orden: 1 }) 
-        let flagElim=0;       
-        for (let i = 0; i < imagenesElim.length; i++) {                
-            if(flagElim>0){
-                let {...campos}=imagenesElim[i];
-                campos._doc.orden=campos._doc.orden-flagElim;    
-                await Imagen.findByIdAndUpdate(imagenesElim[i]._id, campos._doc,{new:true}); 
-            }
-            if(Array.isArray(req.body.imgElim)){
-                for (let j = 0; j < req.body.imgElim.length; j++) {
-                    if(imagenesElim[i].img==req.body.imgElim[j]){
-                        flagElim++;
-                        let pathImg='./files/autos/'+imagenesElim[i].img
-                        if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
-                        await Imagen.findByIdAndDelete(imagenesElim[i]._id);
-                    }
-                }
-            }else{                    
-                if(imagenesElim[i].img==req.body.imgElim){
-                    flagElim++;
-                    let pathImg='./files/autos/'+imagenesElim[i].img
-                    if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
-                    await Imagen.findByIdAndDelete(imagenesElim[i]._id);
+    let toDelete = []; let contFiles=0; let otroCont=0;
+    for (let i = 0; i < req.body.imgOrden.length; i++) {
+        if(req.body.imgEstado[i]==2){
+            toDelete.push(req.body.imgOrden[i])
+        }else if(req.body.imgEstado[i]==1){
+            if(req.files && req.files['img']){
+                if(req.files['img'].length==undefined){
+                    subirImagen(req.files['img'],req.body.auto,(i+1-toDelete.length-otroCont),res)
+                }else{
+                    subirImagen(req.files['img'][contFiles],req.body.auto,(i+1-toDelete.length-otroCont),res)
+                    contFiles++;
                 }
             }
+        }else if(req.body.imgEstado[i]==3){
+            contFiles++; otroCont++;
+        }else{
+            const img = await Imagen.find({img:req.body.imgOrden[i]}) 
+            let {...campos}=img[0];
+            campos._doc.orden=i+1-toDelete.length-otroCont;    
+            await Imagen.findByIdAndUpdate(img[0]._id, campos._doc,{new:true});
         }
 
-    }else if(req.files && req.files['img']) {
-        borrarImagen(req.body.auto,'autos');
-        if(req.files['img'].length==undefined){
-            subirImagen(req.files['img'],req.body.auto,1,res)
-        }else{
-            for (let i = 0; i < req.files['img'].length; i++) {
-                for (let j = 0; j < req.body.imgOrden.length; j++) {
-                    if(req.body.imgOrden[j]==req.files['img'][i].name){                            
-                        subirImagen(req.files['img'][i],req.body.auto,(j+1),res)
-                    }
-                }
-            };
-        }
     }
+
+    for (let i = 0; i < toDelete.length; i++) {
+        const img = await Imagen.find({img:toDelete[i]}) 
+        let pathImg='./files/autos/'+img[0].img
+        if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+        await Imagen.findByIdAndDelete(img[0]._id);
+        console.log('borro: '+toDelete[i]);
+    }
+
+    // if(req.body.imgElim){
+    //     const imagenesElim = await Imagen.find({uuid_auto:autoDB[0].uuid}).sort({ orden: 1 }) 
+    //     let flagElim=0;       
+    //     for (let i = 0; i < imagenesElim.length; i++) {                
+    //         if(flagElim>0){
+    //             let {...campos}=imagenesElim[i];
+    //             campos._doc.orden=campos._doc.orden-flagElim;    
+    //             await Imagen.findByIdAndUpdate(imagenesElim[i]._id, campos._doc,{new:true}); 
+    //         }
+    //         if(Array.isArray(req.body.imgElim)){
+    //             for (let j = 0; j < req.body.imgElim.length; j++) {
+    //                 if(imagenesElim[i].img==req.body.imgElim[j]){
+    //                     flagElim++;
+    //                     let pathImg='./files/autos/'+imagenesElim[i].img
+    //                     if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+    //                     await Imagen.findByIdAndDelete(imagenesElim[i]._id);
+    //                 }
+    //             }
+    //         }else{                    
+    //             if(imagenesElim[i].img==req.body.imgElim){
+    //                 flagElim++;
+    //                 let pathImg='./files/autos/'+imagenesElim[i].img
+    //                 if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+    //                 await Imagen.findByIdAndDelete(imagenesElim[i]._id);
+    //             }
+    //         }
+    //     }
+
+    // }else if(req.files && req.files['img']) {
+    //     borrarImagen(req.body.auto,'autos');
+    //     if(req.files['img'].length==undefined){
+    //         subirImagen(req.files['img'],req.body.auto,1,res)
+    //     }else{
+    //         for (let i = 0; i < req.files['img'].length; i++) {
+    //             for (let j = 0; j < req.body.imgOrden.length; j++) {
+    //                 if(req.body.imgOrden[j]==req.files['img'][i].name){                            
+    //                     subirImagen(req.files['img'][i],req.body.auto,(j+1),res)
+    //                 }
+    //             }
+    //         };
+    //     }
+    // }
     
     await Auto.findByIdAndUpdate(autoDB[0]._id, camposL, {new:true});   
         
