@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 const Form = require('../models/form');
 
 const mailContacto= async(req,res=response)=>{    
-    const {nomapel,telefono,fecha,subject,auto,link} = req.body
+    const {nomapel,telefono,fecha,subject,auto,link,ubicacion} = req.body
     const transporter = nodemailer.createTransport({
         maxConnections: 1,
         pool: true,
@@ -18,8 +18,8 @@ const mailContacto= async(req,res=response)=>{
 
     let msg,msgHTML;
     if(link==''){
-        msg = "Matricula: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha+"\n"+"Descripcion: "+auto;
-        msgHTML = "Matricula: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha+"<br><br>"+"Descripcion: "+auto;
+        msg = "Matricula: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha+"\n"+"Descripcion: "+auto+"\n"+"Ubicacion: "+ubicacion
+        msgHTML = "Matricula: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha+"<br><br>"+"Descripcion: "+auto+"<br><br>"+"Ubicacion: "+ubicacion;
     }else{
         msg = "Nombre y apellido: "+nomapel+"\n"+"Telefono: "+telefono+"\n"+"Fecha: "+fecha+"\n"+"Auto: "+auto+"\n"+"Link: "+link;
         msgHTML = "Nombre y apellido: "+nomapel+"<br><br>"+"Telefono: "+telefono+"<br><br>"+"Fecha: "+fecha+"<br><br>"+"Auto: "+auto+"<br><br>"+"link: "+link;
