@@ -352,19 +352,22 @@ const actualizarAuto= async(req,res=response)=>{
             contFiles++; otroCont++;
         }else{
             const img = await Imagen.find({img:req.body.imgOrden[i]}) 
-            let {...campos}=img[0];
-            campos._doc.orden=i+1-toDelete.length-otroCont;    
-            await Imagen.findByIdAndUpdate(img[0]._id, campos._doc,{new:true});
+            if(img[0]){
+                let {...campos}=img[0];
+                campos._doc.orden=i+1-toDelete.length-otroCont;    
+                await Imagen.findByIdAndUpdate(img[0]._id, campos._doc,{new:true});
+            }
         }
 
     }
 
     for (let i = 0; i < toDelete.length; i++) {
         const img = await Imagen.find({img:toDelete[i]}) 
-        let pathImg='./files/autos/'+img[0].img
-        if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
-        await Imagen.findByIdAndDelete(img[0]._id);
-        console.log('borro: '+toDelete[i]);
+        if(img[0]){
+            let pathImg='./files/autos/'+img[0].img
+            if(fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
+            await Imagen.findByIdAndDelete(img[0]._id);
+        }
     }
 
     // if(req.body.imgElim){
