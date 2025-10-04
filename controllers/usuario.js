@@ -2,19 +2,27 @@ const { response }=require('express');
 const nodemailer = require("nodemailer");
 const Form = require('../models/form');
 
+const transporter = nodemailer.createTransport({
+    maxConnections: 1,
+    pool: true,
+    host: process.env.MSERVICE,
+    port: 465,
+    secure: true,
+    auth: {
+        user: process.env.MAIL1+'@'+process.env.MAIL2,
+        pass: process.env.MPASS
+    },
+    tls: {
+    rejectUnauthorized: false
+    },
+    maxMessages: 100,
+    //family: 4,
+    rateDelta: 60 * 60 * 1000, // 1 hour
+    rateLimit: 80         // max messages per delta
+});
+
 const mailContacto= async(req,res=response)=>{    
     const {nomapel,telefono,fecha,subject,auto,link,ubicacion} = req.body
-    const transporter = nodemailer.createTransport({
-        maxConnections: 1,
-        pool: true,
-        host: process.env.MSERVICE,
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.MAIL1+'@'+process.env.MAIL2,
-            pass: process.env.MPASS
-        }
-    });
 
     let msg,msgHTML;
     if(link==''){
